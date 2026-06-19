@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Live Interactive Football Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0b2414; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-screen {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('https://unsplash.com') no-repeat center center;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        .half-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.6);
+            transform: translateX(-50%);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 500px;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            z-index: 5;
+        }
+
+        .team-red { color: #ff3333; }
+        .team-blue { color: #3366ff; }
+
+        #setup-box {
+            position: absolute;
+            width: 90%;
+            max-width: 400px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 2px solid #ff9900;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            z-index: 10; 
+            transition: opacity 0.5s ease;
+        }
+
+        .setup-title {
+            font-size: 26px;
+            font-weight: bold;
+            color: #ff9900;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .setup-subtitle {
+            font-size: 13px;
+            color: #aaaaaa;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #ff9900;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input:focus { border-color: #ff9900; outline: none; }
+
+        .btn-connect {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(45deg, #ff9900, #ff5500);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 85, 0, 0.3);
+        }
+
+        /*  စာသားဘောက်စ်အတွက် ပြင်ဆင်ချက် */
+        .bottom-console {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            color: #00ffcc;
+            font-size: 14px;
+            text-align: center;
+            z-index: 5;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-box">
+        <div class="setup-title"> SQUAD WAR </div>
+        <div class="setup-subtitle">TikTok Live Interactive System</div>
+        
+        <div class="input-group">
+            <label for="tiktok-username">TikTok Username</label>
+            <input type="text" id="tiktok-username" value="interactive_game_live" placeholder="@username">
+        </div>
+        
+        <button class="btn-connect" onclick="connectToTikTokLive()">CONNECT & START</button>
+    </div>
+
+    <div id="game-screen">
+        <div class="half-line"></div>
+        
+        <div class="score-board">
+            <span class="team-red">RED 0</span>
+            <span>VS</span>
+            <span class="team-blue">0 BLUE</span>
+        </div>
+
+        <div class="bottom-console" id="console-text">
+            [စနစ်] TikTok Live နှင့် ချိတ်ဆက်ရန် အဆင်သင့်ဖြစ်ပါပြီ...
+        </div>
+    </div>
+
+    <script>
+        const battleAudio = new Audio('https://google.com');
+        battleAudio.loop = true;
+
+        const workerUrl = "https://workers.dev"; 
+
+        function connectToTikTokLive() {
+            const username = document.getElementById('tiktok-username').value.trim();
+            const setupBox = document.getElementById('setup-box');
+            const consoleText = document.getElementById('console-text');
+
+            if (!username) {
+                alert('ကျေးဇူးပြု၍ TikTok Username ကို ရိုက်ထည့်ပါ ချစ်ဆုံး။');
+                return;
+            }
+
+            battleAudio.play().catch(e => console.log("Audio blocked"));
+            setupBox.style.display = 'none'; 
+            consoleText.innerHTML = `[စနစ်] <strong>@${username}</strong> ၏ LIVE သို့ အောင်မြင်စွာ ချိတ်ဆက်ပြီးပါပြီ။ ဂိမ်းစတင်ပါပြီ။`;
+
+            //  [လုံးဝ ပျောက်သွားစေမည့် စနစ်သစ်] 
+            // ၃ စက္ကန့်ပြည့်လျှင် စာသားဘောက်စ်တစ်ခုလုံးကို စခရင်ပေါ်မှ လုံးဝ ဖယ်ထုတ်ဖျက်ဆီးပစ်လိုက်ခြင်း
+            setTimeout(() => {
+                consoleText.remove(); 
+            }, 3000); 
+
+            startLiveStreamFetch(username);
+        }
+
+        async function startLiveStreamFetch(username) {
+            const fetchUrl = `${workerUrl}/im/fetch/?room_id=${username}`;
+
+            setInterval(async () => {
+                try {
+                    const response = await fetch(fetchUrl);
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log("TikTok Live Data Received:", data);
+                    }
+                } catch (error) {
+                    console.error("Fetch Error:", error);
+                }
+            }, 3000);
+        }
+    </script>
+
+</body>
+</html>
