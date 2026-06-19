@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Live Interactive Football Game</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            background-color: #05140b;
+        }
+
+        /*  မြက်ခင်းစိမ်း ဘောလုံးကွင်းပြင် (Stable Layout) */
+        #game-screen {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, #1b4d22 50%, #143d1a 50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .half-line {
+            position: absolute;
+            left: 50%; top: 0;
+            width: 4px; height: 100%;
+            background-color: rgba(255, 255, 255, 0.4);
+            z-index: 1;
+            transform: translateX(-50%);
+        }
+
+        .top-ui {
+            width: 100%; display: flex;
+            flex-direction: column; align-items: center;
+            margin-top: 15px; z-index: 5;
+        }
+
+        .score-board {
+            font-size: 32px; font-weight: bold; color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .timer {
+            font-size: 20px; color: #ff9900; font-weight: bold;
+            background: rgba(0,0,0,0.6); padding: 5px 15px;
+            border-radius: 20px; margin-top: 5px;
+        }
+
+        /*  Setup Box (သပ်ရပ်သော Input အပြင်အဆင်) */
+        #setup-box {
+            position: absolute;
+            width: 85%; max-width: 400px;
+            background: rgba(15, 15, 15, 0.96);
+            border: 2px solid #ff9900; border-radius: 15px;
+            padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-align: center; z-index: 10;
+            box-sizing: border-box;
+        }
+
+        .setup-title { font-size: 24px; font-weight: bold; color: #ff9900; margin-bottom: 15px; }
+        
+        .suggestions-box {
+            background: #222; border-radius: 8px;
+            padding: 10px; margin-bottom: 20px;
+            text-align: left; font-size: 12px; color: #bbb;
+        }
+        .suggest-tag {
+            display: inline-block; background: #ff9900; color: black;
+            padding: 3px 8px; border-radius: 4px; margin: 4px;
+            font-weight: bold; cursor: pointer;
+        }
+
+        input {
+            width: 100%; padding: 12px;
+            background: #252525; border: 1px solid #444444;
+            border-radius: 8px; color: white; font-size: 16px;
+            box-sizing: border-box; margin-bottom: 20px;
+        }
+        .btn-connect {
+            width: 100%; padding: 14px;
+            background: linear-gradient(45deg, #ff9900, #ff5500);
+            border: none; border-radius: 8px; color: white;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+        }
+
+        /*  CR7 & Messi Logo (Responsive Design) */
+        .bottom-logos {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; height: 35vh; display: flex;
+            z-index: 2; pointer-events: none;
+        }
+        .logo-section { width: 50%; height: 100%; background-size: cover; background-position: center top; opacity: 0.8; }
+        .ronaldo-logo { background-image: url('https://unsplash.com'); border-right: 1px solid rgba(255,255,255,0.1); }
+        .messi-logo { background-image: url('https://unsplash.com'); }
+
+        /*  စစ်သည်တော်များ (Mobile Optimized) */
+        .player-node {
+            position: absolute; width: 45px; height: 45px;
+            border-radius: 50%; background-size: cover; background-position: center;
+            z-index: 3; transition: all 0.6s linear;
+            display: flex; justify-content: center; align-items: flex-end;
+            box-shadow: 0 0 8px rgba(255,255,255,0.5);
+        }
+        .red-soldier { border: 3px solid #ff3333; }
+        .blue-soldier { border: 3px solid #3366ff; }
+        .player-name {
+            background: rgba(0,0,0,0.75); color: white; font-size: 8px;
+            padding: 2px 4px; border-radius: 4px;
+            white-space: nowrap; margin-bottom: -14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-box">
+        <div class="setup-title"> SQUAD WAR LIVE </div>
+        
+        <div class="suggestions-box">
+             <strong>စမ်းသပ်ရန် နာမည်ကြီး Live အကောင့်များ:</strong><br>
+            <span class="suggest-tag" onclick="fillUser('jungkook')">jungkook</span>
+            <span class="suggest-tag" onclick="fillUser('mrbeast')">mrbeast</span>
+            <span class="suggest-tag" onclick="fillUser('khaby.lame')">khaby.lame</span>
+            <span class="suggest-tag" onclick="fillUser('zachking')">zachking</span>
+            <span class="suggest-tag" onclick="fillUser('bellapoarch')">bellapoarch</span>
+        </div>
+
+        <input type="text" id="tiktok-username" placeholder="Username ရိုက်ထည့်ပါ သို့မဟုတ် အပေါ်ကရွေးပါ...">
+        <button class="btn-connect" onclick="connectToTikTokLive()">CONNECT & START</button>
+    </div>
+
+    <div id="game-screen">
+        <div class="half-line"></div>
+        <div class="top-ui">
+            <div class="score-board">
+                <span id="red-score-text" style="color:#ff3333;">RED 0</span> - <span id="blue-score-text" style="color:#3366ff;">0 BLUE</span>
+            </div>
+            <div class="timer">18:06</div>
+        </div>
+        <div class="bottom-logos">
+            <div class="logo-section ronaldo-logo"></div>
+            <div class="logo-section messi-logo"></div>
+        </div>
+    </div>
+
+    <script>
+        const battleAudio = new Audio('https://google.com');
+        battleAudio.loop = true;
+
+        // Cloudflare Worker URL (Proxy)
+        const workerUrl = "https://workers.dev";
+        let redScore = 0;
+        let blueScore = 0;
+
+        function fillUser(name) {
+            document.getElementById('tiktok-username').value = name;
+        }
+
+        function connectToTikTokLive() {
+            const username = document.getElementById('tiktok-username').value.trim();
+            const setupBox = document.getElementById('setup-box');
+
+            if (!username) {
+                alert('ကျေးဇူးပြု၍ TikTok Username ကို ရိုက်ထည့်ပါ ချစ်ဆုံး။');
+                return;
+            }
+
+            battleAudio.play().catch(e => console.log("Audio blocked"));
+            setupBox.remove(); 
+
+            startLiveStreamFetch(username);
+        }
+
+        //  [Stable Engine] မည်သည့်ဖုန်းမဆို ဒေတာအမှန်တကယ် ကိုက်ညီစွာဆွဲယူမည့် စနစ်သစ်
+        async function startLiveStreamFetch(username) {
+            // လမ်းကြောင်းကို Standard Fetch API ပုံစံဖြင့် သေချာစွာ ချိန်ညှိထားခြင်း
+            const fetchUrl = `${workerUrl}/api/webcast/incoming?room_id=${encodeURIComponent(username)}`;
+
+            setInterval(async () => {
+                try {
+                    const response = await fetch(fetchUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        const liveData = await response.json();
+                        
+                        // ဒေတာ Array ထဲမှ ဒေတာများကို သေချာစွာ စစ်ထုတ်ဖတ်ရှုခြင်း
+                        if (liveData && Array.isArray(liveData.events)) {
+                            liveData.events.forEach(event => {
+                                if (event.type === 'comment' || event.type === 'gift') {
+                                    const pName = event.uniqueId || "User";
+                                    const pImg = event.profilePictureUrl || "https://w3schools.com";
+                                    const pTeam = (event.type === 'gift') ? 'blue' : 'red';
+                                    
+                                    spawnSoldier(pName, pImg, pTeam);
+                                }
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.log("Stable Engine Fetching Live Connection...");
+                }
+            }, 2500); // မိုဘိုင်းလ်ဖုန်းလိုင်းများအတွက် အသင့်တော်ဆုံး ၂.၅ စက္ကန့် Interval သတ်မှတ်ခြင်း
+        }
+
+        function spawnSoldier(name, profileImg, team) {
+            const container = document.getElementById('game-screen');
+            const soldier = document.createElement('div');
+            
+            soldier.classList.add('player-node');
+            soldier.classList.add(team === 'red' ? 'red-soldier' : 'blue-soldier');
+            soldier.style.backgroundImage = `url('${profileImg}')`;
+
+            // Mobile Screen များနှင့် ကွက်တိဖြစ်စေမည့် Responsive Coordinates
+            if(team === 'red') {
+                soldier.style.left = Math.floor(Math.random() * 32) + 'vw';
+            } else {
+                soldier.style.left = Math.floor(Math.random() * 32 + 58) + 'vw';
+            }
+            soldier.style.top = Math.floor(Math.random() * 40 + 15) + 'vh';
+
+            const nameLabel = document.createElement('div');
+            nameLabel.classList.add('player-name');
+            nameLabel.innerText = name;
+            soldier.appendChild(nameLabel);
+
+            container.appendChild(soldier);
+
+            // ကစားသမားလေးများ ကွင်းလယ်သို့ ရွေ့လျားသွားပြီး ပျောက်ကွယ်ကာ ရမှတ်တိုးခြင်း
+            setTimeout(() => {
+                soldier.style.left = '46vw';
+                setTimeout(() => {
+                    soldier.remove();
