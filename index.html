@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Live Interactive Football Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 450px;
+            background: #1e1e1e;
+            border: 2px solid #ff9900;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(255, 153, 0, 0.3);
+            text-align: center;
+        }
+
+        .game-logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff9900;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .game-sublogo {
+            font-size: 14px;
+            color: #aaaaaa;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #ff9900;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .btn-connect {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff9900, #ff5500);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 10px rgba(255, 85, 0, 0.4);
+        }
+
+        .btn-connect:hover {
+            transform: scale(1.02);
+        }
+
+        .status-box {
+            margin-top: 20px;
+            padding: 12px;
+            background: #252525;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #cccccc;
+            border-left: 4px solid #ff9900;
+            display: none;
+        }
+
+        .loading-dots::after {
+            content: ' .';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ' .'; }
+            40% { content: ' . .'; }
+            60% { content: ' . . .'; }
+            80%, 100% { content: ' . . . .'; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="game-logo"> SQUAD WAR </div>
+        <div class="game-sublogo">TikTok Live Interactive System</div>
+
+        <div class="input-group">
+            <label for="tiktok-username">TikTok Username</label>
+            <input type="text" id="tiktok-username" value="interactive_game_live">
+        </div>
+
+        <button class="btn-connect" onclick="startTikTokConnection()">CONNECT & START</button>
+
+        <div class="status-box" id="status-display"></div>
+    </div>
+
+    <script>
+        // အခမဲ့ တိုက်ခိုက်ရေး နောက်ခံအသံဖိုင် (Battle Sound Effect) ကို ချိတ်ဆက်ခြင်း
+        const battleAudio = new Audio('https://google.com');
+        battleAudio.loop = true; // အသံကို အဆက်မပြတ် မြည်နေစေရန်
+
+        function startTikTokConnection() {
+            const username = document.getElementById('tiktok-username').value.trim();
+            const statusBox = document.getElementById('status-display');
+
+            if (!username) {
+                alert('ကျေးဇူးပြု၍ TikTok Username ကို ရိုက်ထည့်ပါ ချစ်ဆုံး။');
+                return;
+            }
+
+            statusBox.style.display = 'block';
+            statusBox.innerHTML = `<strong>@${username}</strong> ၏ LIVE ကို စစ်ဆေးနေပါသည် <span class="loading-dots"></span>`;
+
+            // တိုက်ခိုက်ရေးအသံကို စတင်ဖွင့်ခြင်း
+            battleAudio.play().catch(error => {
+                console.log("Audio play blocked by browser. Click anywhere to play sound.");
+            });
+
+            // Cloudflare Worker ချိတ်ဆက်မှု လမ်းကြောင်း
+            const workerUrl = "https://workers.dev"; 
+        }
+    </script>
+
+</body>
+</html>
