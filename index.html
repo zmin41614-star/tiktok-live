@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TikTok Football War</title>
+    <style>
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #2e7d32; color: white; font-family: sans-serif; 
+            overflow: hidden; position: relative;
+        }
+
+        /* ချိန်ညှိမှုအကွက် */
+        #setup-box { 
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            padding: 20px; width: 80%; max-width: 320px;
+            background: rgba(20, 20, 20, 0.95); border-radius: 10px; 
+            border: 2px solid #00adb5; z-index: 999; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        input { padding: 12px; width: 85%; border-radius: 6px; border: none; font-size: 16px; margin-bottom: 12px; text-align: center; background: #fff; color: #000; }
+        button { padding: 12px; background: #00adb5; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; width: 90%; cursor: pointer; }
+        #status { font-size: 14px; margin-top: 8px; color: #ffeb3b; }
+
+        /* အမှတ်စာရင်း */
+        #game-header {
+            position: absolute; top: 15px; width: 100%; text-align: center; z-index: 100; pointer-events: none;
+        }
+        h1 { margin: 0; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        #score { font-size: 28px; font-weight: bold; margin-top: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+
+        /* ဘောလုံးကွင်းပြင် */
+        #pitch { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow: hidden; }
+        #half-line { position: absolute; left: 50%; width: 3px; height: 100%; background: rgba(255,255,255,0.5); z-index: 2; }
+        #center-circle {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 120px; height: 120px; border: 3px solid rgba(255,255,255,0.5); border-radius: 50%; z-index: 2;
+        }
+
+        /* ဘယ်/ညာ စာသားဒီဇိုင်း */
+        .bg-text {
+            position: absolute; top: 40%; width: 50%; text-align: center;
+            font-size: 45px; font-weight: 900; color: rgba(255,255,255,0.12); pointer-events: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        #left-text { left: 0; }
+        #right-text { right: 0; }
+
+        /* စစ်သည်တော်များ */
+        .player { 
+            position: absolute; width: 40px; height: 40px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 11px; font-weight: bold; color: white; 
+            transition: left 1.5s linear; z-index: 10; border: 2px solid white;
+            text-shadow: 1px 1px 2px black;
+        }
+        .red-team { background: #ff1744; box-shadow: 0 0 12px #ff1744; }
+        .blue-team { background: #2979ff; box-shadow: 0 0 12px #2979ff; }
+    </style>
+</head>
+<body>
+
+    <div id="game-header">
+        <h1>FOOTBALL WAR</h1>
+        <div id="score"><span style="color:#ff1744">CR7</span> <span id="red-score">0</span> - <span id="blue-score">0</span> <span style="color:#2979ff">MESSI</span></div>
+    </div>
+
+    <div id="setup-box">
+        <input type="text" id="username-input" placeholder="TikTok Username ရိုက်ပါ..." value="min.zin0907">
+        <button id="connect-btn" onclick="startFastConnection()">CONNECT & START</button>
+        <div id="status">Username ရိုက်ပြီး Connect နှိပ်ပါ</div>
+    </div>
+
+    <div id="pitch">
+        <div id="left-text" class="bg-text">CR7<br><span style="font-size:80px;color:#ff1744">7</span></div>
+        <div id="right-text" class="bg-text">MESSI<br><span style="font-size:80px;color:#2979ff">10</span></div>
+        <div id="half-line"></div>
+        <div id="center-circle"></div>
+    </div>
+
+    <script>
+        const pitch = document.getElementById('pitch');
+        let scores = { red: 0, blue: 0 };
+        let ws = null;
+
+        // အော်ဒီယို စနစ်
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(isGoal) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = isGoal ? 'sine' : 'sawtooth';
+                osc.frequency.setValueAtTime(isGoal ? 280 : 160, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(isGoal ? 550 : 50, audioCtx.currentTime + (isGoal ? 0.5 : 0.25));
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + (isGoal ? 0.5 : 0.25));
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + (isGoal ? 0.5 : 0.25));
+            } catch (e) {}
+        }
+
+        function startFastConnection() {
+            audioCtx.resume();
+            const username = document.getElementById('username-input').value.trim();
+            if(!username) return alert('Username ဖြည့်ပါ ချစ်ဆုံး');
+
+            document.getElementById('status').innerText = "၁ စက္ကန့်အတွင်း တိုက်ရိုက်ချိတ်ဆက်နေပါသည်...";
+
+            if (ws) { ws.close(); }
+
+            // အမှားအယွင်းမရှိ တိုက်ရိုက်ချိတ်ဆက်ပေးမည့် WebSocket စနစ်
+            ws = new WebSocket(`wss://://wstiktok.com{username}`);
+
+            ws.onopen = () => {
+                document.getElementById('status').innerText = "ချိတ်ဆက်မှု အောင်မြင်ပါပြီ ချစ်ဆုံး!";
+                document.getElementById('status').style.color = '#4caf50';
+                
+                setTimeout(() => {
+                    document.getElementById('setup-box').style.display = 'none';
+                }, 800);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.event === 'gift') {
+                        let team = 'blue';
+                        if (data.giftName === 'Rose') {
+                            team = 'red';
+                        }
+                        spawnPlayer(data.uniqueId, team, data.count || 1);
+                    }
+                } catch (e) {
+                    console.error("Data error", e);
+                }
+            };
+
+            ws.onclose = () => {
+                document.getElementById('status').innerText = "ချိတ်ဆက်မှု ပြတ်တောက်သွားပါသည် (Live လွှင့်ထားဆဲဖြစ်ရပါမည်)";
+                document.getElementById('status').style.color = '#f44336';
+            };
+
+            ws.onerror = () => {
+                document.getElementById('status').innerText = "ချိတ်ဆက်မှု အမှားအယွင်းရှိပါသည်";
+                document.getElementById('status').style.color = '#f44336';
+            };
+        }
+
+        function spawnPlayer(name, team, count) {
+            playSound(false);
+
+            const player = document.createElement('div');
+            player.className = `player ${team}-team`;
+            player.innerText = name.substring(0, 3).toUpperCase();
+            
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const randomY = Math.random() * (h - 180) + 100;
+            
+            player.style.top = randomY + 'px';
+            player.style.left = team === 'red' ? '10px' : (w - 50) + 'px';
+            pitch.appendChild(player);
+
+            setTimeout(() => {
+                player.style.left = team === 'red' ? (w - 50) + 'px' : '10px';
+            }, 50);
+
+            setTimeout(() => {
+                playSound(true);
+                scores[team] += count;
+                document.getElementById(`${team}-score`).innerText = scores[team];
+                player.remove();
+            }, 1550);
+        }
+    </script>
+</body>
+</html>
